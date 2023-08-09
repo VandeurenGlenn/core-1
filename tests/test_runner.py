@@ -1,8 +1,11 @@
 """Test the runner."""
 import asyncio
+from collections.abc import Iterator
 import threading
 from unittest.mock import patch
 
+import packaging.tags
+import py
 import pytest
 
 from homeassistant import core, runner
@@ -28,7 +31,7 @@ async def test_cumulative_shutdown_timeout_less_than_supervisor() -> None:
     )
 
 
-async def test_setup_and_run_hass(hass: HomeAssistant, tmpdir) -> None:
+async def test_setup_and_run_hass(hass: HomeAssistant, tmpdir: py.path.local) -> None:
     """Test we can setup and run."""
     test_dir = tmpdir.mkdir("config")
     default_config = runner.RuntimeConfig(test_dir)
@@ -42,7 +45,7 @@ async def test_setup_and_run_hass(hass: HomeAssistant, tmpdir) -> None:
     assert mock_run.called
 
 
-def test_run(hass: HomeAssistant, tmpdir) -> None:
+def test_run(hass: HomeAssistant, tmpdir: py.path.local) -> None:
     """Test we can run."""
     test_dir = tmpdir.mkdir("config")
     default_config = runner.RuntimeConfig(test_dir)
@@ -57,7 +60,9 @@ def test_run(hass: HomeAssistant, tmpdir) -> None:
     assert mock_run.called
 
 
-def test_run_executor_shutdown_throws(hass: HomeAssistant, tmpdir) -> None:
+def test_run_executor_shutdown_throws(
+    hass: HomeAssistant, tmpdir: py.path.local
+) -> None:
     """Test we can run and we still shutdown if the executor shutdown throws."""
     test_dir = tmpdir.mkdir("config")
     default_config = runner.RuntimeConfig(test_dir)
@@ -79,7 +84,7 @@ def test_run_executor_shutdown_throws(hass: HomeAssistant, tmpdir) -> None:
 
 
 def test_run_does_not_block_forever_with_shielded_task(
-    hass: HomeAssistant, tmpdir, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, tmpdir: py.path.local, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test we can shutdown and not block forever."""
     test_dir = tmpdir.mkdir("config")
@@ -144,19 +149,22 @@ async def test_unhandled_exception_traceback(
 
 
 def test__enable_posix_spawn() -> None:
-    """Test that we can enable posix_spawn on Alpine."""
+    """Test that we can enable posix_spawn on musllinux."""
 
-    def _mock_alpine_exists(path):
-        return path == "/etc/alpine-release"
+    def _mock_sys_tags_any() -> Iterator[packaging.tags.Tag]:
+        yield from packaging.tags.parse_tag("py3-none-any")
 
-    with patch.object(runner.subprocess, "_USE_POSIX_SPAWN", False), patch.object(
-        runner.os.path, "exists", _mock_alpine_exists
+    def _mock_sys_tags_musl() -> Iterator[packaging.tags.Tag]:
+        yield from packaging.tags.parse_tag("cp311-cp311-musllinux_1_1_x86_64")
+
+    with patch.object(runner.subprocess, "_USE_POSIX_SPAWN", False), patch(
+        "homeassistant.runner.packaging.tags.sys_tags", side_effect=_mock_sys_tags_musl
     ):
         runner._enable_posix_spawn()
         assert runner.subprocess._USE_POSIX_SPAWN is True
 
-    with patch.object(runner.subprocess, "_USE_POSIX_SPAWN", False), patch.object(
-        runner.os.path, "exists", return_value=False
+    with patch.object(runner.subprocess, "_USE_POSIX_SPAWN", False), patch(
+        "homeassistant.runner.packaging.tags.sys_tags", side_effect=_mock_sys_tags_any
     ):
         runner._enable_posix_spawn()
         assert runner.subprocess._USE_POSIX_SPAWN is False
