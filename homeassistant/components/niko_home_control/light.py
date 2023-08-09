@@ -8,6 +8,12 @@ from typing import Any
 import nikohomecontrol
 import voluptuous as vol
 
+from homeassistant.components.cover import (
+    PLATFORM_SCHEMA,
+    SUPPORT_CLOSE,
+    SUPPORT_OPEN,
+    CoverEntity,
+)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     PLATFORM_SCHEMA,
@@ -49,9 +55,50 @@ async def async_setup_platform(
         _LOGGER.error("Unable to access %s (%s)", host, err)
         raise PlatformNotReady from err
 
-    async_add_entities(
-        [NikoHomeControlLight(light, niko_data) for light in nhc.list_actions()], True
-    )
+    entities = []
+    for action in nhc.list_actions():
+        _LOGGER.debug(action.name)
+        _LOGGER.debug(action._state["type"])
+        if action._state["type"] == 4:  # Identify shutters
+            entities.append(NikoHomeControlShutter(action, niko_data))
+        else:
+            entities.append(NikoHomeControlLight(action, niko_data))
+
+    async_add_entities(entities, True)
+
+
+class NikoHomeControlShutter(CoverEntity):
+    """Representation of a Niko Shutter."""
+
+    def __init__(self, shutter, data):
+        """Set up the Niko Home Control shutter platform."""
+        self._data = data
+        self._shutter = shutter
+        self._attr_unique_id = f"shutter-{shutter.id}"
+        self._attr_name = shutter.name
+        self._attr_is_closed = shutter.is_on
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_OPEN | SUPPORT_CLOSE
+
+    def open_cover(self, **kwargs: Any) -> None:
+        """Open the cover."""
+        _LOGGER.debug("Open cover: %s", self.name)
+        self._shutter.turn_on()
+
+    def close_cover(self, **kwargs: Any) -> None:
+        """Close the cover."""
+        _LOGGER.debug("Close cover: %s", self.name)
+        self._shutter.turn_off()
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    async def async_update(self) -> None:
+        """Get the latest data from NikoHomeControl API."""
+        await self._data.async_update()
+        state = self._data.get_state(self._shutter.id)
+        self._attr_is_closed = state != 0
 
 
 class NikoHomeControlLight(LightEntity):
