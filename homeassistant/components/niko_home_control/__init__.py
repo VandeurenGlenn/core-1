@@ -13,7 +13,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
@@ -41,8 +41,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _LOGGER.error("Unable to access %s (%s)", host, err)
         raise PlatformNotReady from err
 
-    hass.async_create_task(async_load_platform(hass, "light", DOMAIN, {}, config))
-    hass.async_create_task(async_load_platform(hass, "cover", DOMAIN, {}, config))
+    load_platform(hass, "light", DOMAIN, {}, config)
+    load_platform(hass, "cover", DOMAIN, {}, config)
     return True
 
 
