@@ -33,8 +33,7 @@ async def async_load_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Niko Home Control light platform."""
-    if discovery_info is None:
-        return
+
     entities = []
     for action in hass.data[DOMAIN].niko_actions():
         _LOGGER.debug(action.name)
