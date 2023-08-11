@@ -11,19 +11,17 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
-from . import DOMAIN
-from .const import MIN_TIME_BETWEEN_UPDATES
+from .const import DOMAIN, MIN_TIME_BETWEEN_UPDATES
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_DEVICE_CLASS): cv.string,
     }
