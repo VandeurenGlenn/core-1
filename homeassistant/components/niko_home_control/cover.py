@@ -4,43 +4,21 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import voluptuous as vol
-
-from homeassistant.components.cover import (
-    PLATFORM_SCHEMA,
-    CoverEntity,
-    CoverEntityFeature,
-)
-from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST, CONF_NAME
+from homeassistant.components.cover import CoverEntity, CoverEntityFeature
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
-from . import DOMAIN
-from .const import MIN_TIME_BETWEEN_UPDATES
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_DEVICE_CLASS): cv.string,
-    }
-)
+from .const import DOMAIN, MIN_TIME_BETWEEN_UPDATES
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_load_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType,
+async def async_setup_entry(
+    hass: HomeAssistant, config: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the Niko Home Control shutter platform."""
-    if discovery_info is None:
-        return
+    """Set up the Niko Home Control shutter."""
     entities = []
     for action in hass.data[DOMAIN].niko_actions():
         _LOGGER.debug(action.name)
@@ -56,7 +34,7 @@ class NikoHomeControlShutter(CoverEntity):
     """Representation of a Niko Shutter."""
 
     def __init__(self, shutter, data):
-        """Set up the Niko Home Control shutter platform."""
+        """Set up the Niko Home Control shutter."""
         self._data = data
         self._shutter = shutter
         self._attr_unique_id = f"shutter-{shutter.id}"

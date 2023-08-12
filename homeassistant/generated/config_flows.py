@@ -304,6 +304,7 @@ FLOWS = {
         "nfandroidtv",
         "nibe_heatpump",
         "nightscout",
+        "niko_home_control",
         "nina",
         "nmap_tracker",
         "nobo_hub",

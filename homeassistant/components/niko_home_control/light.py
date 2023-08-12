@@ -13,28 +13,26 @@ from homeassistant.components.light import (
     LightEntity,
     brightness_supported,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN
+from .const import DOMAIN
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_load_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Niko Home Control light platform."""
-    if discovery_info is None:
-        return
+
     entities = []
     for action in hass.data[DOMAIN].niko_actions():
         _LOGGER.debug(action.name)
