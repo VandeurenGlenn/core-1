@@ -42,7 +42,7 @@ async def async_setup_entry(
         if action_type == 1 | action_type == 2:
             entities.append(NikoHomeControlLight(action, hub))
 
-        async_add_entities(entities, True)
+    async_add_entities(entities, True)
 
 
 class NikoHomeControlLight(LightEntity):

@@ -28,7 +28,7 @@ async def async_setup_entry(
         if action_type == 4:  # blinds/covers
             entities.append(NikoHomeControlCover(action, hub))
 
-        async_add_entities(entities, True)
+    async_add_entities(entities, True)
 
 
 class NikoHomeControlCover(CoverEntity):
