@@ -7,6 +7,7 @@ from typing import Any
 from homeassistant.components.cover import CoverEntity, CoverEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .action import Action
@@ -40,6 +41,11 @@ class NikoHomeControlCover(CoverEntity):
         self._attr_unique_id = f"cover-{cover.id}"
         self._attr_name = cover.name
         self._attr_is_closed = cover.is_on
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, cover.id)},
+            manufacturer=hub.manufacturer,
+            name=cover.name,
+        )
 
     @property
     def supported_features(self):

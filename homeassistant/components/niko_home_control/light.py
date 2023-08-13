@@ -17,6 +17,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .action import Action
@@ -56,6 +57,12 @@ class NikoHomeControlLight(LightEntity):
         self._attr_is_on = light.is_on
         self._attr_color_mode = ColorMode.ONOFF
         self._attr_supported_color_modes = {ColorMode.ONOFF}
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, light.id)},
+            manufacturer=hub.manufacturer,
+            name=light.name,
+        )
+
         if light._state["type"] == 2:
             self._attr_color_mode = ColorMode.BRIGHTNESS
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
