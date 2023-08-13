@@ -39,7 +39,7 @@ class NikoHomeControlCover(CoverEntity):
         self._cover = cover
         self._attr_unique_id = f"cover-{cover.id}"
         self._attr_name = cover.name
-        self._attr_is_closed = cover.is_off
+        self._attr_is_closed = cover._state["value1"] == 0
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, cover.id)},
             manufacturer=hub.manufacturer,
