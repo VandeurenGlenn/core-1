@@ -4,7 +4,11 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from homeassistant.components.cover import CoverEntity, CoverEntityFeature
+from homeassistant.components.cover import (
+    ATTR_POSITION,
+    CoverEntity,
+    CoverEntityFeature,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -55,22 +59,17 @@ class NikoHomeControlCover(CoverEntity):
     def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         _LOGGER.debug("Open cover: %s", self.name)
-        self._cover.async_open_cover()
+        self._cover.turn_on(100)
 
     def close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         _LOGGER.debug("Close cover: %s", self.name)
-        self._cover.async_close_cover()
+        self._cover.turn_off()
 
-    def turn_on(self, **kwargs: Any) -> None:
-        """Open the cover."""
-        _LOGGER.debug("Open cover: %s", self.name)
-        self._cover.async_open_cover()
-
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Close the cover."""
-        _LOGGER.debug("Close cover: %s", self.name)
-        self._cover.async_close_cover()
+        _LOGGER.debug("position cover: %s", self.name)
+        self._cover.turn_on(kwargs[ATTR_POSITION])
 
     async def async_update(self) -> None:
         """Get the latest data from NikoHomeControl API."""
