@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN
 from .hub import Hub
 
-PLATFORMS: list[str] = ["cover", "light"]
+PLATFORMS: list[str] = ["light", "cover"]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
