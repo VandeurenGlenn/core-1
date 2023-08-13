@@ -56,6 +56,12 @@ class NikoHomeControlCover(CoverEntity):
         state = self._hub.get_action_state(self._cover.id)
         return state == 0
 
+    @property
+    def available(self) -> bool:
+        """Return True if when available."""
+        return True
+
+    @property
     def is_open(self) -> bool:
         """Return if the cover is closed, same as position 0."""
         state = self._hub.get_action_state(self._cover.id)
