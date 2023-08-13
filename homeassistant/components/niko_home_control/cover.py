@@ -8,10 +8,9 @@ from homeassistant.components.cover import CoverEntity, CoverEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import Throttle
 
 from .action import Action
-from .const import DOMAIN, MIN_TIME_BETWEEN_UPDATES
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,7 +23,6 @@ async def async_setup_entry(
     hub = hass.data[DOMAIN]["hub"]
     for action in hub.actions():
         _LOGGER.debug(action.name)
-        _LOGGER.debug(", %s", str(action))
         action_type = Action(action).action_type
         if action_type == 4:  # blinds/shutters
             entities.append(NikoHomeControlShutter(action, hub))
@@ -68,7 +66,6 @@ class NikoHomeControlShutter(CoverEntity):
         _LOGGER.debug("Close cover: %s", self.name)
         self._shutter.async_close_cover()
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
         """Get the latest data from NikoHomeControl API."""
         await self._hub.async_update()

@@ -37,7 +37,6 @@ async def async_setup_entry(
     entities = []
     for action in hub.actions():
         _LOGGER.debug(action.name)
-        _LOGGER.debug(", %s", str(action))
         action_type = Action(action).action_type
         if action_type == 1 | action_type == 2:
             entities.append(NikoHomeControlLight(action, hub))
