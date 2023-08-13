@@ -2,13 +2,8 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
-from homeassistant.components.cover import (
-    ATTR_POSITION,
-    CoverEntity,
-    CoverEntityFeature,
-)
+from homeassistant.components.cover import CoverEntity, CoverEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -56,22 +51,17 @@ class NikoHomeControlCover(CoverEntity):
         """Flag supported features."""
         return CoverEntityFeature.CLOSE | CoverEntityFeature.OPEN
 
-    def open_cover(self, **kwargs: Any) -> None:
+    def open_cover(self):
         """Open the cover."""
         _LOGGER.debug("Open cover: %s", self.name)
-        self._cover.turn_on(100)
+        self._cover.turn_on()
 
-    def close_cover(self, **kwargs: Any) -> None:
+    def close_cover(self):
         """Close the cover."""
         _LOGGER.debug("Close cover: %s", self.name)
         self._cover.turn_off()
 
-    async def async_set_cover_position(self, **kwargs: Any) -> None:
-        """Close the cover."""
-        _LOGGER.debug("position cover: %s", self.name)
-        self._cover.turn_on(kwargs[ATTR_POSITION])
-
-    async def async_update(self) -> None:
+    async def async_update(self):
         """Get the latest data from NikoHomeControl API."""
         await self._hub.async_update()
         state = self._hub.get_action_state(self._cover.id)
