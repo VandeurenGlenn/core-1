@@ -62,7 +62,7 @@ class Hub:
 
     async def async_update(self):
         """Update data."""
-        return self._data.async_update()
+        return await self._data.async_update()
 
     def get_action_state(self, action_id):
         """Get action state."""
