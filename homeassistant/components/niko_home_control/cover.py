@@ -64,7 +64,7 @@ class NikoHomeControlCover(CoverEntity):
     def close_cover(self):
         """Close the cover."""
         _LOGGER.debug("Close cover: %s", self.name)
-        self._cover.turn_off()
+        self._cover.turn_on(0)
 
     async def async_update(self):
         """Get the latest data from NikoHomeControl API."""
