@@ -50,7 +50,7 @@ class Hub:
             niko_actions = nhc.list_actions
             niko_data = NikoHomeControlData(self._hass, nhc)
             await niko_data.async_update()
-            self._hass.data[DOMAIN] = {niko_data, niko_actions}
+            self._hass.data[DOMAIN] = {niko_data: niko_data, niko_actions: niko_actions}
             return True
         except asyncio.TimeoutError as ex:
             raise ConfigEntryNotReady(
