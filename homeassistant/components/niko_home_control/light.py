@@ -19,6 +19,7 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .action import Action
 from .const import DOMAIN
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_HOST): cv.string})
@@ -32,14 +33,14 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Niko Home Control light platform."""
-
+    hub = hass.data[DOMAIN]["hub"]
     entities = []
-    for action in hass.data[DOMAIN].niko_actions():
+    for action in hub.actions():
         _LOGGER.debug(action.name)
         _LOGGER.debug(", %s", str(action))
-        action_state = hass.data[DOMAIN].niko_data.get_state(action.id)
-        if action_state == 1 | action_state == 2:  # lights & dimmable lights
-            entities.append(NikoHomeControlLight(action, hass.data[DOMAIN].niko_data))
+        action_type = Action(action).action_type
+        if action_type == 1 | action_type == 2:
+            entities.append(NikoHomeControlLight(action, hub))
 
         async_add_entities(entities, True)
 
@@ -47,9 +48,9 @@ async def async_setup_entry(
 class NikoHomeControlLight(LightEntity):
     """Representation of an Niko Light."""
 
-    def __init__(self, light, data):
+    def __init__(self, light, hub):
         """Set up the Niko Home Control light platform."""
-        self._data = data
+        self._hub = hub
         self._light = light
         self._attr_unique_id = f"light-{light.id}"
         self._attr_name = light.name
@@ -72,8 +73,8 @@ class NikoHomeControlLight(LightEntity):
 
     async def async_update(self) -> None:
         """Get the latest data from NikoHomeControl API."""
-        await self._data.async_update()
-        state = self._data.get_state(self._light.id)
+        await self._hub.async_update()
+        state = self._hub.get_action_state(self._light.id)
         self._attr_is_on = state != 0
         if brightness_supported(self.supported_color_modes):
             self._attr_brightness = state * 2.55
