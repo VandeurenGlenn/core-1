@@ -56,6 +56,11 @@ class NikoHomeControlCover(CoverEntity):
         state = self._hub.get_action_state(self._cover.id)
         return state == 0
 
+    def is_open(self) -> bool:
+        """Return if the cover is closed, same as position 0."""
+        state = self._hub.get_action_state(self._cover.id)
+        return state == 100
+
     def open_cover(self):
         """Open the cover."""
         _LOGGER.debug("Open cover: %s", self.name)
