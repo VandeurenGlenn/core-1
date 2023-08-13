@@ -29,11 +29,11 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigEntry,
+    entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Niko Home Control light platform."""
-    hub = hass.data[DOMAIN]["hub"]
+    hub = hass.data[DOMAIN][entry.entry_id]
     entities = []
     for action in hub.actions():
         _LOGGER.debug(action.name)

@@ -15,7 +15,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hub = Hub(hass, entry.data["name"], entry.data["host"], entry.data["port"])
     await hub.connect()
 
-    hass.data.setdefault(DOMAIN, {})["hub"] = hub
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = hub
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
