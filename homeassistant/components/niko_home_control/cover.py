@@ -44,7 +44,7 @@ class NikoHomeControlShutter(CoverEntity):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return CoverEntityFeature
+        return CoverEntityFeature.CLOSE | CoverEntityFeature.OPEN
 
     def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
