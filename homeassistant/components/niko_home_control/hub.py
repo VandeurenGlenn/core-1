@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 
 import nikohomecontrol
 import voluptuous as vol
@@ -20,14 +21,7 @@ DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_PORT, default=DEFAULT_PORT): vol.Coerce(int),
     }
 )
-
-
-# async def async_setup_entry(
-#     hass: HomeAssistant,
-#     config: ConfigEntry,
-#     async_add_entities: AddEntitiesCallback,
-# ) -> None:
-#     """setup hub"""
+_LOGGER = logging.getLogger(__name__)
 
 
 class Hub:
@@ -75,6 +69,7 @@ class Hub:
                 {"ip": self._host, "port": self._port, "timeout": 20000}
             )
             self._data = NikoHomeControlData(self._hass, self._nhc)
+            _LOGGER.debug(self._nhc.list_actions_raw())
             await self.async_update()
             return True
         except asyncio.TimeoutError as ex:
