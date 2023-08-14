@@ -49,7 +49,9 @@ class NikoHomeControlCover(CoverEntity):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return CoverEntityFeature.CLOSE | CoverEntityFeature.OPEN
+        return (
+            CoverEntityFeature.CLOSE | CoverEntityFeature.OPEN | CoverEntityFeature.STOP
+        )
 
     @property
     def is_closed(self) -> bool:
