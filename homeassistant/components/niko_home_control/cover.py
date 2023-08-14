@@ -71,7 +71,7 @@ class NikoHomeControlCover(CoverEntity):
     async def async_close_cover(self):
         """Close the cover."""
         _LOGGER.debug("Close cover: %s", self.name)
-        self._hub.executeActions(self._cover.id, 127.5)
+        self._hub.executeActions(self._cover.id, 254)
         # self._cover.turn_off()
 
     async def async_open_cover(self):
