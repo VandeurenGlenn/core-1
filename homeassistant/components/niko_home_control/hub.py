@@ -94,6 +94,7 @@ class Hub:
             self._data = NikoHomeControlData(self._hass, self._nhc)
             await self.async_update()
             return True
+
         except asyncio.TimeoutError as ex:
             raise ConfigEntryNotReady(
                 f"Timeout while connecting to {self._host}:{self._port}"
