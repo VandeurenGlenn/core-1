@@ -77,7 +77,8 @@ class NikoHomeControlCover(CoverEntity):
     async def async_open_cover(self):
         """Open the cover."""
         _LOGGER.debug("Open cover: %s", self.name)
-        self._cover.turn_on()
+        self._hub.executeActions(self._cover.id, 100)
+        # self._cover.turn_on()
 
     async def async_update(self):
         """Get the latest data from NikoHomeControl API."""
