@@ -74,7 +74,7 @@ class Hub:
         )
 
     def _command(self, cmd):
-        data = json.loads(self.connection.send(cmd))
+        data = json.loads(self._nhc.connection.send(cmd))
         _LOGGER.debug(data)
         if "error" in data["data"] and data["data"]["error"] > 0:
             error = data["data"]["error"]
