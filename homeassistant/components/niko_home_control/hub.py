@@ -65,6 +65,9 @@ class Hub:
 
     def executeActions(self, action_id, value):
         """Debug."""
+        _LOGGER.debug("execute")
+        _LOGGER.debug(action_id)
+        _LOGGER.debug(value)
         return self._command(
             '{"cmd":"executeactions", "id": "'
             + str(action_id)
