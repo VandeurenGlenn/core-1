@@ -11,6 +11,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .action import Action
 from .const import DOMAIN
+from .hub import Hub
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,13 +34,12 @@ async def async_setup_entry(
 class NikoHomeControlCover(CoverEntity):
     """Representation of a Niko Cover."""
 
-    def __init__(self, cover, hub):
+    def __init__(self, cover, hub: Hub) -> None:
         """Set up the Niko Home Control cover."""
         self._hub = hub
         self._cover = cover
         self._attr_unique_id = f"cover-{cover.id}"
         self._attr_name = cover.name
-        self._attr_device_class = "shutter"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, cover.id)},
             manufacturer=hub.manufacturer,
@@ -64,14 +64,15 @@ class NikoHomeControlCover(CoverEntity):
 
     @property
     def is_open(self) -> bool:
-        """Return if the cover is closed, same as position 0."""
+        """Return if the cover is closed, same as position !0."""
         state = self._hub.get_action_state(self._cover.id)
-        return state == 100
+        return state != 0
 
     async def async_close_cover(self):
         """Close the cover."""
         _LOGGER.debug("Close cover: %s", self.name)
-        self._cover.turn_on()
+        self._hub.executeActions(self._cover.id, 0)
+        # self._cover.turn_off()
 
     async def async_open_cover(self):
         """Open the cover."""

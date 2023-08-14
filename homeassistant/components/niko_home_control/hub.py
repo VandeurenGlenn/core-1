@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 
 import nikohomecontrol
@@ -61,6 +62,25 @@ class Hub:
     def get_action_state(self, action_id):
         """Get action state."""
         return self._data.get_state(action_id)
+
+    def executeActions(self, action_id, value):
+        """Debug."""
+        return self._command(
+            '{"cmd":"executeactions", "id": "'
+            + str(action_id)
+            + '", "value1": "'
+            + str(value)
+            + '"}'
+        )
+
+    def _command(self, cmd):
+        data = json.loads(self.connection.send(cmd))
+        _LOGGER.debug(data)
+        if "error" in data["data"] and data["data"]["error"] > 0:
+            error = data["data"]["error"]
+            _LOGGER.error(error)
+
+        return data["data"]
 
     async def connect(self) -> bool:
         """connect."""
