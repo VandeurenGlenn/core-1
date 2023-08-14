@@ -68,17 +68,23 @@ class NikoHomeControlCover(CoverEntity):
         state = self._hub.get_action_state(self._cover.id)
         return state != 0
 
-    async def async_close_cover(self):
-        """Close the cover."""
-        _LOGGER.debug("Close cover: %s", self.name)
-        self._hub.executeActions(self._cover.id, 254)
-        # self._cover.turn_off()
-
     async def async_open_cover(self):
         """Open the cover."""
         _LOGGER.debug("Open cover: %s", self.name)
-        self._hub.executeActions(self._cover.id, 255)
-        # self._cover.turn_on()
+        # 255 = open
+        self._cover.turn_on(255)
+
+    async def async_close_cover(self):
+        """Close the cover."""
+        _LOGGER.debug("Close cover: %s", self.name)
+        # 254 = close
+        self._cover.turn_on(254)
+
+    async def async_stop_cover(self):
+        """Stop the cover."""
+        _LOGGER.debug("Stop cover: %s", self.name)
+        # 253 = open
+        self._cover.turn_on(253)
 
     async def async_update(self):
         """Get the latest data from NikoHomeControl API."""
