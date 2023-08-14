@@ -76,6 +76,17 @@ class Hub:
             + '"}'
         )
 
+    def listen(self):
+        """Listen for events."""
+        logging.info("Now listening for incoming TCP traffic ...")
+        self.connection.send('{"cmd":"startevents"}')
+        while True:
+            data = self._nhc.connection.receive()
+            if not data:
+                break
+            if data.isspace():
+                _LOGGER.debug(json.loads(json.dumps(data)))
+
     def _command(self, cmd):
         data = json.loads(self._nhc.connection.send(cmd))
         _LOGGER.debug(data)
