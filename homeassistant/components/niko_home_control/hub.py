@@ -1,11 +1,11 @@
-"""The niko_home_control component."""
+"""The niko_home_control hub."""
 from __future__ import annotations
 
 import asyncio
 import json
 import logging
 
-import nikohomecontrol
+from nikohomecontrol import NikoHomeControl
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
@@ -39,7 +39,7 @@ class Hub:
         self._name = name
         self._id = name
         self._data: NikoHomeControlData
-        self._nhc: nikohomecontrol.NikoHomeControl
+        self._nhc: NikoHomeControl
 
     @property
     def hub_id(self) -> str:
@@ -88,7 +88,7 @@ class Hub:
     async def connect(self) -> bool:
         """connect."""
         try:
-            self._nhc = nikohomecontrol.NikoHomeControl(
+            self._nhc = NikoHomeControl(
                 {"ip": self._host, "port": self._port, "timeout": 20000}
             )
             self._data = NikoHomeControlData(self._hass, self._nhc)

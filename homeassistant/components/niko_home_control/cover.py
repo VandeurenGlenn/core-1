@@ -1,6 +1,7 @@
 """Setup NikoHomeControlcover."""
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
@@ -15,7 +16,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .action import Action
-from .const import DOMAIN
+from .const import COVER_CLOSE, COVER_OPEN, COVER_STOP, DOMAIN
 from .hub import Hub
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,6 +46,7 @@ class NikoHomeControlCover(CoverEntity):
         self._cover = cover
         self._attr_unique_id = f"cover-{cover.id}"
         self._attr_name = cover.name
+        self._moving = False
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, cover.id)},
             manufacturer=hub.manufacturer,
@@ -62,10 +64,25 @@ class NikoHomeControlCover(CoverEntity):
         )
 
     @property
+    def current_cover_position(self):
+        """Return the current position of the cover."""
+        return self._hub.get_action_state(self._cover.id)
+
+    @property
     def is_closed(self) -> bool:
         """Return if the cover is closed, same as position 0."""
         state = self._hub.get_action_state(self._cover.id)
         return state == 0
+
+    @property
+    def is_closing(self) -> bool:
+        """Return if the cover is closing or not."""
+        return self._moving
+
+    @property
+    def is_opening(self) -> bool:
+        """Return if the cover is opening or not."""
+        return self._moving
 
     @property
     def available(self) -> bool:
@@ -82,24 +99,38 @@ class NikoHomeControlCover(CoverEntity):
         """Open the cover."""
         _LOGGER.debug("Open cover: %s", self.name)
         # 255 = open
-        self._cover.turn_on(255)
+        self._cover.turn_on(COVER_OPEN)
 
     def close_cover(self):
         """Close the cover."""
         _LOGGER.debug("Close cover: %s", self.name)
         # 254 = close
-        self._cover.turn_on(254)
+        self._cover.turn_on(COVER_CLOSE)
 
     def stop_cover(self):
         """Stop the cover."""
         _LOGGER.debug("Stop cover: %s", self.name)
         # 253 = open
-        self._cover.turn_on(253)
+        self._cover.turn_on(COVER_STOP)
 
-    def set_cover_position(self, **kwargs: Any) -> None:
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Set the cover position."""
         _LOGGER.debug("Set cover position: %s", self.name)
-        self._cover.turn_on(kwargs.get(ATTR_POSITION, 255) / 2.55)
+        self._moving = True
+        target = kwargs.get(ATTR_POSITION, 100)
+
+        if target > self.current_cover_position:
+            self._cover.turn_on()
+            while target > self.current_cover_position:
+                await asyncio.sleep(1)
+
+        else:
+            self._cover.turn_off()
+            while target < self.current_cover_position:
+                await asyncio.sleep(1)
+
+        self.stop_cover()
+        self._moving = False
 
     async def async_update(self):
         """Get the latest data from NikoHomeControl API."""
