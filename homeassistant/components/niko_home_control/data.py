@@ -1,10 +1,6 @@
 """The class for handling data retrieval."""
 import logging
 
-from homeassistant.util import Throttle
-
-from .const import MIN_TIME_BETWEEN_UPDATES
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -19,7 +15,6 @@ class NikoHomeControlData:
         self.data = {}
         self._system_info = None
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Get the latest data from the NikoHomeControl API."""
         _LOGGER.debug("Fetching async state in bulk")

@@ -2,8 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-import json
-import logging
 
 import nikohomecontrol
 import voluptuous as vol
@@ -22,7 +20,6 @@ DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_PORT, default=DEFAULT_PORT): vol.Coerce(int),
     }
 )
-_LOGGER = logging.getLogger(__name__)
 
 
 class Hub:
@@ -62,39 +59,6 @@ class Hub:
     def get_action_state(self, action_id):
         """Get action state."""
         return self._data.get_state(action_id)
-
-    def executeActions(self, action_id, value):
-        """Debug."""
-        _LOGGER.debug("execute")
-        _LOGGER.debug(action_id)
-        _LOGGER.debug(value)
-        return self._command(
-            '{"cmd":"executeactions", "id": "'
-            + str(action_id)
-            + '", "value1": "'
-            + str(value)
-            + '"}'
-        )
-
-    def listen(self):
-        """Listen for events."""
-        logging.info("Now listening for incoming TCP traffic ...")
-        self.connection.send('{"cmd":"startevents"}')
-        while True:
-            data = self._nhc.connection.receive()
-            if not data:
-                break
-            if data.isspace():
-                _LOGGER.debug(json.loads(json.dumps(data)))
-
-    def _command(self, cmd):
-        data = json.loads(self._nhc.connection.send(cmd))
-        _LOGGER.debug(data)
-        if "error" in data["data"] and data["data"]["error"] > 0:
-            error = data["data"]["error"]
-            _LOGGER.error(error)
-
-        return data["data"]
 
     async def connect(self) -> bool:
         """connect."""

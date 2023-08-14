@@ -123,13 +123,13 @@ class NikoHomeControlCover(CoverEntity):
             self._cover.turn_on(COVER_OPEN)
             while target > self.current_cover_position:
                 await self._hub.async_update()
-                await asyncio.sleep(1)
+                await asyncio.sleep(10)
 
         else:
             self._cover.turn_on(COVER_CLOSE)
             while target < self.current_cover_position:
                 await self._hub.async_update()
-                await asyncio.sleep(1)
+                await asyncio.sleep(10)
 
         self.stop_cover()
         self._moving = False
