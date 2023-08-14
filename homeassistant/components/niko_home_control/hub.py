@@ -92,7 +92,6 @@ class Hub:
                 {"ip": self._host, "port": self._port, "timeout": 20000}
             )
             self._data = NikoHomeControlData(self._hass, self._nhc)
-            _LOGGER.debug(self._nhc.list_actions_raw())
             await self.async_update()
             return True
         except asyncio.TimeoutError as ex:
