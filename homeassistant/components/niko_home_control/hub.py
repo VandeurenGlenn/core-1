@@ -5,7 +5,7 @@ import asyncio
 import json
 import logging
 
-from nikohomecontrol import NikoHomeControl
+import nikohomecontrol
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
@@ -39,7 +39,7 @@ class Hub:
         self._name = name
         self._id = name
         self._data: NikoHomeControlData
-        self._nhc: NikoHomeControl
+        self._nhc: nikohomecontrol.NikoHomeControl
 
     @property
     def hub_id(self) -> str:
@@ -88,7 +88,7 @@ class Hub:
     async def connect(self) -> bool:
         """connect."""
         try:
-            self._nhc = NikoHomeControl(
+            self._nhc = nikohomecontrol.NikoHomeControl(
                 {"ip": self._host, "port": self._port, "timeout": 20000}
             )
             self._data = NikoHomeControlData(self._hass, self._nhc)
