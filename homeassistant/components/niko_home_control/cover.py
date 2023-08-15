@@ -40,11 +40,13 @@ async def async_setup_entry(
 class NikoHomeControlCover(CoverEntity):
     """Representation of a Niko Cover."""
 
+    should_poll = False
+
     def __init__(self, cover, hub: Hub) -> None:
         """Set up the Niko Home Control cover."""
         self._hub = hub
         self._cover = cover
-        self._attr_unique_id = f"cover-{cover.id}"
+        self._attr_unique_id = f"cover-{cover.action_id}"
         self._attr_name = cover.name
         self._moving = False
         self._attr_device_info = DeviceInfo(
@@ -66,13 +68,12 @@ class NikoHomeControlCover(CoverEntity):
     @property
     def current_cover_position(self):
         """Return the current position of the cover."""
-        return self._hub.get_action_state(self._cover.id)
+        return self._cover.state
 
     @property
     def is_closed(self) -> bool:
         """Return if the cover is closed, same as position 0."""
-        state = self._hub.get_action_state(self._cover.id)
-        return state == 0
+        return self._cover.state == 0
 
     @property
     def is_closing(self) -> bool:
@@ -91,9 +92,8 @@ class NikoHomeControlCover(CoverEntity):
 
     @property
     def is_open(self) -> bool:
-        """Return if the cover is closed, same as position !0."""
-        state = self._hub.get_action_state(self._cover.id)
-        return state != 0
+        """Return if the cover is open, same as position 100."""
+        return self._cover.state > 0
 
     def open_cover(self):
         """Open the cover."""
@@ -122,20 +122,26 @@ class NikoHomeControlCover(CoverEntity):
         if target > self.current_cover_position:
             self._cover.turn_on(COVER_OPEN)
             while target > self.current_cover_position:
-                await self._hub.async_update()
-                await asyncio.sleep(10)
+                await asyncio.sleep(1)
 
         else:
             self._cover.turn_on(COVER_CLOSE)
             while target < self.current_cover_position:
-                await self._hub.async_update()
-                await asyncio.sleep(10)
+                await asyncio.sleep(1)
 
         self.stop_cover()
         self._moving = False
 
-    async def async_update(self):
-        """Get the latest data from NikoHomeControl API."""
-        await self._hub.async_update()
-        state = self._hub.get_action_state(self._cover.id)
+    def update_state(self, state):
+        """Update HA state."""
         self._attr_is_closed = state == 0
+        self._attr_current_cover_position = state
+        self.publish_updates()
+
+    async def async_added_to_hass(self):
+        """Run when this Entity has been added to HA."""
+        self._cover.register_callback(self.async_write_ha_state)
+
+    async def async_will_remove_from_hass(self):
+        """Entity being removed from hass."""
+        self._cover.remove_callback(self.async_write_ha_state)

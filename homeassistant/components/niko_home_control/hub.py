@@ -2,16 +2,20 @@
 from __future__ import annotations
 
 import asyncio
+import concurrent.futures
+import json
+import queue
+import threading
 
-import nikohomecontrol
+from nikohomecontrol import NikoHomeControlConnection
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
+from .action import Action
 from .const import DEFAULT_IP, DEFAULT_NAME, DEFAULT_PORT
-from .data import NikoHomeControlData
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -35,8 +39,18 @@ class Hub:
         self._hass = hass
         self._name = name
         self._id = name
-        self._data: NikoHomeControlData
-        self._nhc: nikohomecontrol.NikoHomeControl
+        try:
+            self.connection = NikoHomeControlConnection(self._host, self._port)
+            actions = []
+            for action in self.list_actions():
+                actions.append(Action(action))
+
+            self._actions = actions
+
+        except asyncio.TimeoutError as ex:
+            raise ConfigEntryNotReady(
+                f"Timeout while connecting to {self._host}:{self._port}"
+            ) from ex
 
     @property
     def hub_id(self) -> str:
@@ -50,7 +64,7 @@ class Hub:
 
     def actions(self):
         """Actions."""
-        return self._nhc.list_actions()
+        return self._actions
 
     async def async_update(self):
         """Update data."""
@@ -60,17 +74,48 @@ class Hub:
         """Get action state."""
         return self._data.get_state(action_id)
 
-    async def connect(self) -> bool:
-        """connect."""
-        try:
-            self._nhc = nikohomecontrol.NikoHomeControl(
-                {"ip": self._host, "port": self._port, "timeout": 20000}
-            )
-            self._data = NikoHomeControlData(self._hass, self._nhc)
-            await self.async_update()
-            return True
+    def start_events(self):
+        """Start events."""
+        pipeline = queue.Queue(maxsize=10)
+        event = threading.Event()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+            executor.submit(self.listen, pipeline, event)
+            executor.submit(self.handle, pipeline, event)
+            event.set()
 
-        except asyncio.TimeoutError as ex:
-            raise ConfigEntryNotReady(
-                f"Timeout while connecting to {self._host}:{self._port}"
-            ) from ex
+    def list_actions(self):
+        """List all actions."""
+        data = json.loads(self.connection.send('{"cmd":"listactions"}'))
+        if "error" in data["data"] and data["data"]["error"] > 0:
+            error = data["data"]["error"]
+            if error == 100:
+                raise "NOT_FOUND"
+            if error == 200:
+                raise "SYNTAX_ERROR"
+            if error == 300:
+                raise "ERROR"
+
+        return data["data"]
+
+    def listen(self, pipeline, event):
+        """Listen for events."""
+        self.connection.send('{"cmd":"startevents"}')
+        while True:
+            data = self.connection.receive()
+            if not data:
+                break
+            if not data.isspace():
+                pipeline.put(json.loads(json.dumps(data)))
+
+    def get_action(self, action_id):
+        """Get action by id."""
+        actions = [action for action in self._actions if action.action_id == action_id]
+        return actions[0]
+
+    def handle(self, pipeline, event):
+        """Handle incoming action."""
+        while True:
+            if not pipeline.empty():
+                message = pipeline.get()
+                action = self.get_action(message["id"])
+                action.update_state(message["value1"])

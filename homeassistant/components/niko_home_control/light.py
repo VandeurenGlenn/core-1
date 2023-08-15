@@ -11,7 +11,6 @@ from homeassistant.components.light import (
     PLATFORM_SCHEMA,
     ColorMode,
     LightEntity,
-    brightness_supported,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
@@ -43,7 +42,7 @@ async def async_setup_entry(
         if action_type == 1:
             entities.append(NikoHomeControlLight(action, hub))
         if action_type == 2:
-            entities.append(NikoHomeControlLight(action, hub))
+            entities.append(NikoHomeControlDimmableLight(action, hub))
 
     async_add_entities(entities, True)
 
@@ -51,13 +50,15 @@ async def async_setup_entry(
 class NikoHomeControlLight(LightEntity):
     """Representation of an Niko Light."""
 
+    should_poll = False
+
     def __init__(self, light, hub):
         """Set up the Niko Home Control light platform."""
         self._hub = hub
         self._light = light
-        self._attr_unique_id = f"light-{light.id}"
         self._attr_name = light.name
         self._attr_is_on = light.is_on
+        self._attr_unique_id = f"light-{light.id}"
         self._attr_color_mode = ColorMode.ONOFF
         self._attr_supported_color_modes = {ColorMode.ONOFF}
         self._attr_device_info = DeviceInfo(
@@ -66,9 +67,35 @@ class NikoHomeControlLight(LightEntity):
             name=light.name,
         )
 
-        if light._state["type"] == 2:
-            self._attr_color_mode = ColorMode.BRIGHTNESS
-            self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+    def update_state(self, state):
+        """Update HA state."""
+        self._attr_is_on = state != 0
+        self.publish_updates()
+
+    def turn_off(self, **kwargs: Any) -> None:
+        """Instruct the light to turn off."""
+        _LOGGER.debug("Turn off: %s", self.name)
+        self._light.turn_off()
+
+    async def async_added_to_hass(self):
+        """Run when this Entity has been added to HA."""
+        self._cover.register_callback(self.async_write_ha_state)
+
+    async def async_will_remove_from_hass(self):
+        """Entity being removed from hass."""
+        self._cover.remove_callback(self.async_write_ha_state)
+
+
+class NikoHomeControlDimmableLight(NikoHomeControlLight):
+    """Representation of an Niko Dimmable Light."""
+
+    def __init__(self, light, hub):
+        """Set up the Niko Home Control Dimmable Light platform."""
+        super().__init__(light, light)
+
+        self._attr_unique_id = f"dimmable-{light.id}"
+        self._attr_color_mode = ColorMode.BRIGHTNESS
+        self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
     def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
@@ -80,10 +107,16 @@ class NikoHomeControlLight(LightEntity):
         _LOGGER.debug("Turn off: %s", self.name)
         self._light.turn_off()
 
-    async def async_update(self) -> None:
-        """Get the latest data from NikoHomeControl API."""
-        await self._hub.async_update()
-        state = self._hub.get_action_state(self._light.id)
+    def update_state(self, state):
+        """Update HA state."""
         self._attr_is_on = state != 0
-        if brightness_supported(self.supported_color_modes):
-            self._attr_brightness = state * 2.55
+        self._attr_brightness = state * 2.55
+        self.publish_updates()
+
+    async def async_added_to_hass(self):
+        """Run when this Entity has been added to HA."""
+        self._cover.register_callback(self.async_write_ha_state)
+
+    async def async_will_remove_from_hass(self):
+        """Entity being removed from hass."""
+        self._cover.remove_callback(self.async_write_ha_state)

@@ -28,10 +28,8 @@ async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
 
     hub = Hub(hass, data["name"], data["host"], data["port"])
-    # The dummy hub provides a `test_connection` method to ensure it's working
-    # as expected
-    result = await hub.connect()
-    if not result:
+
+    if not hub:
         # If there is an error, raise an exception to notify HA that there was a
         # problem. The UI will also show there was a problem
         raise CannotConnect
