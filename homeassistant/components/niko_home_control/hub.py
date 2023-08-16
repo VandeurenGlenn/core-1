@@ -43,11 +43,16 @@ class Hub:
             self.connection = NikoHomeControlConnection(self._host, self._port)
             actions = []
             for action in self.list_actions():
-                actions.append(Action(action))
+                actions.append(Action(action, self))
 
-            self._actions = actions
+            self._actions: list[Action] = list(actions)
 
         except asyncio.TimeoutError as ex:
+            raise ConfigEntryNotReady(
+                f"Timeout while connecting to {self._host}:{self._port}"
+            ) from ex
+
+        except BaseException as ex:
             raise ConfigEntryNotReady(
                 f"Timeout while connecting to {self._host}:{self._port}"
             ) from ex
@@ -62,9 +67,34 @@ class Hub:
         """Data."""
         return self._data
 
+    @property
     def actions(self):
         """Actions."""
         return self._actions
+
+    def execute_actions(self, action_id, action_value):
+        """Execute Actions."""
+        return self._execute(
+            '{"cmd":"executeactions", "id": "'
+            + str(action_id)
+            + '", "value1": "'
+            + str(action_value)
+            + '"}'
+        )
+
+    def _execute(self, message):
+        """Execute command."""
+        data = json.loads(self.connection.send(message))
+        if "error" in data["data"] and data["data"]["error"] > 0:
+            error = data["data"]["error"]
+            if error == 100:
+                raise "NOT_FOUND"
+            if error == 200:
+                raise "SYNTAX_ERROR"
+            if error == 300:
+                raise "ERROR"
+
+        return list(data["data"])
 
     async def async_update(self):
         """Update data."""
@@ -85,27 +115,17 @@ class Hub:
 
     def list_actions(self):
         """List all actions."""
-        data = json.loads(self.connection.send('{"cmd":"listactions"}'))
-        if "error" in data["data"] and data["data"]["error"] > 0:
-            error = data["data"]["error"]
-            if error == 100:
-                raise "NOT_FOUND"
-            if error == 200:
-                raise "SYNTAX_ERROR"
-            if error == 300:
-                raise "ERROR"
-
-        return data["data"]
+        return self._execute('{"cmd":"listactions"}')
 
     def listen(self, pipeline, event):
         """Listen for events."""
-        self.connection.send('{"cmd":"startevents"}')
+        self._execute('{"cmd":"startevents"}')
         while True:
             data = self.connection.receive()
             if not data:
                 break
             if not data.isspace():
-                pipeline.put(json.loads(json.dumps(data)))
+                pipeline.put(json.loads(data))
 
     def get_action(self, action_id):
         """Get action by id."""
@@ -117,5 +137,6 @@ class Hub:
         while True:
             if not pipeline.empty():
                 message = pipeline.get()
-                action = self.get_action(message["id"])
-                action.update_state(message["value1"])
+                for _action in message.get("data"):
+                    action = self.get_action(_action.get("id"))
+                    action.update_state(_action.get("value1"))

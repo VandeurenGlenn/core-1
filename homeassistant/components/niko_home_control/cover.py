@@ -15,7 +15,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .action import Action
 from .const import COVER_CLOSE, COVER_OPEN, COVER_STOP, DOMAIN
 from .hub import Hub
 
@@ -28,9 +27,10 @@ async def async_setup_entry(
     """Set up the Niko Home Control cover."""
     entities = []
     hub = hass.data[DOMAIN][entry.entry_id]
-    for action in hub.actions():
+
+    for action in hub.actions:
         _LOGGER.debug(action.name)
-        action_type = Action(action).action_type
+        action_type = action.action_type
         if action_type == 4:  # blinds/covers
             entities.append(NikoHomeControlCover(action, hub))
 
@@ -50,7 +50,7 @@ class NikoHomeControlCover(CoverEntity):
         self._attr_name = cover.name
         self._moving = False
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, cover.id)},
+            identifiers={(DOMAIN, cover.action_id)},
             manufacturer=hub.manufacturer,
             name=cover.name,
         )
@@ -131,12 +131,6 @@ class NikoHomeControlCover(CoverEntity):
 
         self.stop_cover()
         self._moving = False
-
-    def update_state(self, state):
-        """Update HA state."""
-        self._attr_is_closed = state == 0
-        self._attr_current_cover_position = state
-        self.publish_updates()
 
     async def async_added_to_hass(self):
         """Run when this Entity has been added to HA."""
