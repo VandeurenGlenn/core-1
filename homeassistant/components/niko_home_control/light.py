@@ -125,6 +125,6 @@ class NikoHomeControlDimmableLight(NikoHomeControlLight):
         _LOGGER.debug("Update state: %s", self.name)
         _LOGGER.debug("State: %s", state)
         self._light.state = state
-        self._attr_is_on = state < 0
+        self._attr_is_on = state != 0
         self._attr_brightness = state * 2.55
         self.async_write_ha_state()
