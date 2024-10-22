@@ -52,6 +52,9 @@ class NikoHomeControlFan(FanEntity):
         self._percentages = [33, 66, 100]
         self._attr_percentage = self._percentages[action.state]
 
+        area = None
+        if options["importLocations"] is not False:
+            area = action.location
         if options["treatAsDevice"] is not False:
             self._attr_device_info = {
                 "identifiers": {(DOMAIN, self._attr_unique_id)},
@@ -60,8 +63,8 @@ class NikoHomeControlFan(FanEntity):
                 "model": "P.O.M",
                 "suggested_area": action.location,
                 "via_device": hub._via_device,
+                "suggested_area": area,
             }
-
         else:
             self._attr_device_info = hub._device_info
 
