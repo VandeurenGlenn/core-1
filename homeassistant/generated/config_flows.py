@@ -401,6 +401,7 @@ FLOWS = {
         "nibe_heatpump",
         "nice_go",
         "nightscout",
+        "niko_home_control",
         "nina",
         "nmap_tracker",
         "nobo_hub",
