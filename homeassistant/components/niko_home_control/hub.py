@@ -145,7 +145,8 @@ class Hub:
                     if "event" in message and message["event"] == "listactions":
                         for _action in message["data"]:
                             entity = self.get_entity(_action["id"])
-                            entity.update_state(_action["value1"])
+                            if entity is not None:
+                                entity.update_state(_action["value1"])
             except any:
                 _LOGGER.debug("exception")
                 _LOGGER.debug(line)
@@ -153,4 +154,7 @@ class Hub:
     def get_entity(self, action_id):
         """Get entity by id."""
         actions = [action for action in self.entities if action.id == action_id]
-        return actions[0]
+        try:
+            return actions[0]
+        except IndexError:
+            return None
