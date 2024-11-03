@@ -47,10 +47,11 @@ class NikoHomeControlFan(FanEntity):
         self._attr_speed_count = 3
         self._enable_turn_on_off_backwards_compatibility = False
         self._attr_supported_features = (
-            FanEntityFeature.SET_SPEED
+            FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
         )
         self._percentages = [33, 66, 100]
         self._attr_percentage = self._percentages[action.state]
+        self._attr_preset_modes = ["Boost"]
 
         area = None
         if options["importLocations"] is not False:
@@ -78,11 +79,6 @@ class NikoHomeControlFan(FanEntity):
         """A Niko Action action_id."""
         return self._action.action_id
 
-    @property
-    def supported_features(self):
-        """Return supported features."""
-        return self._attr_supported_features
-
     def set_percentage(self, percentage: int) -> None:
         """Set the fan speed preset based on a given percentage."""
         mode = 0 # low
@@ -92,15 +88,26 @@ class NikoHomeControlFan(FanEntity):
             mode = 1 # medium
 
         self._attr_percentage = self._percentages[mode]
+        self._attr_preset_mode = None
         self._action.set_fan_speed(mode)
         self.schedule_update_ha_state()
 
+    def set_preset_mode(self, preset_mode: str) -> None:
+        """Set the preset mode of the fan."""
+        if preset_mode == "Boost":
+            self._action.set_fan_speed(3)
+            self._attr_preset_mode = "Boost"
+            self._attr_percentage = None
+
     def update_state(self, state):
         """Update HA state."""
-        if state > 2: # map "boost" to high state
-            state = 2
+        if state == 3: # boost state
+            self._attr_preset_mode = "Boost"
+            self._attr_percentage = None
+        else:
+            self._attr_preset_mode = None
+            self._attr_percentage = self._percentages[state]
 
-        self._attr_percentage = self._percentages[state]
         self.async_write_ha_state()
 
     async def async_set_percentage(self, percentage: int) -> None:
