@@ -1,11 +1,14 @@
 """Setup NikoHomeControlFan."""
+import logging
+
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.percentage import percentage_to_ordered_list_item
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(DOMAIN)
 
 
 async def async_setup_entry(
@@ -31,6 +34,7 @@ async def async_setup_entry(
             hub.entities.append(entity)
             entities.append(entity)
 
+    _LOGGER.debug(hub.entities)
     async_add_entities(entities, True)
 
 
@@ -46,24 +50,22 @@ class NikoHomeControlFan(FanEntity):
         self._attr_unique_id = f"fan-{action.action_id}"
         self._attr_speed_count = 3
         self._enable_turn_on_off_backwards_compatibility = False
-        self._attr_supported_features = (
-            FanEntityFeature.SET_SPEED
-        )
+        self._attr_supported_features = FanEntityFeature.SET_SPEED
         self._percentages = [33, 66, 100]
         self._attr_percentage = self._percentages[action.state]
 
         area = None
         if options["importLocations"] is not False:
-            area = action.location
+            area = action.suggested_area
+
         if options["treatAsDevice"] is not False:
             self._attr_device_info = {
                 "identifiers": {(DOMAIN, self._attr_unique_id)},
                 "manufacturer": "Niko",
                 "name": action.name,
                 "model": "P.O.M",
-                "suggested_area": action.location,
-                "via_device": hub._via_device,
                 "suggested_area": area,
+                "via_device": hub._via_device,
             }
         else:
             self._attr_device_info = hub._device_info
@@ -85,11 +87,11 @@ class NikoHomeControlFan(FanEntity):
 
     def set_percentage(self, percentage: int) -> None:
         """Set the fan speed preset based on a given percentage."""
-        mode = 0 # low
+        mode = 0  # low
         if percentage > 67:
-            mode = 2 # high
+            mode = 2  # high
         elif percentage <= 67 and percentage > 33:
-            mode = 1 # medium
+            mode = 1  # medium
 
         self._attr_percentage = self._percentages[mode]
         self._action.set_fan_speed(mode)
@@ -97,7 +99,7 @@ class NikoHomeControlFan(FanEntity):
 
     def update_state(self, state):
         """Update HA state."""
-        if state > 2: # map "boost" to high state
+        if state > 2:  # map "boost" to high state
             state = 2
 
         self._attr_percentage = self._percentages[state]

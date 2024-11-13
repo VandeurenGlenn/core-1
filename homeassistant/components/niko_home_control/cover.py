@@ -52,7 +52,7 @@ class NikoHomeControlCover(CoverEntity):
 
         area = None
         if options["importLocations"] is not False:
-            area = cover.location
+            area = cover.suggested_area
         if options["treatAsDevice"] is not False:
             self._attr_device_info = {
                 "identifiers": {(DOMAIN, self._attr_unique_id)},

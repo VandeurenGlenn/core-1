@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import ipaddress
 
+from nhc.connection import NHCConnection
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
@@ -10,7 +11,6 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from .const import DEFAULT_IP, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
-from .controller import NikoHomeControlController
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -50,11 +50,10 @@ async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, str | int
     if port < 0 or port > 65535:
         raise InvalidPort
 
-    controller = NikoHomeControlController(host, port)
+    connection = NHCConnection(host, port)
 
-    if not controller:
+    if not connection:
         raise CannotConnect
-
     return {"name": name, "host": host, "port": port}
 
 

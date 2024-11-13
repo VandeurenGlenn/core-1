@@ -1347,11 +1347,11 @@ nextcord==2.0.0a8
 # homeassistant.components.nextdns
 nextdns==2.1.0
 
+# homeassistant.components.niko_home_control
+nhc==0.1.10
+
 # homeassistant.components.nibe_heatpump
 nibe==2.5.2
-
-# homeassistant.components.niko_home_control
-niko-home-control==0.3.0
 
 # homeassistant.components.nilu
 niluclient==0.1.2

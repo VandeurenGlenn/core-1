@@ -1,8 +1,9 @@
 """Setup NikoHomeControlLight."""
 from __future__ import annotations
 
-import logging
 from typing import Any
+
+from nhc.light import NHCLight
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
@@ -10,8 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -32,13 +31,13 @@ async def async_setup_entry(
         entity = None
         action_type = action.action_type
         if action_type == 1:
-            entity = NikoHomeControlLight(action, hub, options=entry.data["options"])
+            entity = NikoHomeControlLight(hub, action, options=entry.data["options"])
         if action_type == 2:
             entity = NikoHomeControlDimmableLight(
-                action, hub, options=entry.data["options"]
+                hub, action, options=entry.data["options"]
             )
 
-        if entity:
+        if entity is not None:
             hub.entities.append(entity)
             entities.append(entity)
 
@@ -48,24 +47,26 @@ async def async_setup_entry(
 class NikoHomeControlLight(LightEntity):
     """Representation of an Niko Light."""
 
-    def __init__(self, light, hub, options):
+    def __init__(self, hub, action: NHCLight, options):
         """Set up the Niko Home Control light platform."""
-        self._hub = hub
-        self._light = light
-        self._attr_name = light.name
-        self._attr_is_on = light.is_on
-        self._attr_unique_id = f"light-{light.action_id}"
+        self._action = action
+
+        # hass states
+        self._attr_name = action.name
+        self._attr_is_on = action.is_on
+        self._attr_unique_id = f"light-{action.action_id}"
         self._attr_color_mode = ColorMode.ONOFF
         self._attr_supported_color_modes = {ColorMode.ONOFF}
 
         area = None
         if options["importLocations"] is not False:
-            area = light.location
+            area = action.suggested_area
+
         if options["treatAsDevice"] is not False:
             self._attr_device_info = {
                 "identifiers": {(DOMAIN, self._attr_unique_id)},
                 "manufacturer": "Niko",
-                "name": light.name,
+                "name": action.name,
                 "model": "P.O.M",
                 "via_device": hub._via_device,
                 "suggested_area": area,
@@ -81,23 +82,19 @@ class NikoHomeControlLight(LightEntity):
     @property
     def id(self):
         """A Niko Action action_id."""
-        return self._light.action_id
+        return self._action.action_id
 
     def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
-        _LOGGER.debug("Turn on: %s", self.name)
-        self._light.turn_on(100)
+        self._action.turn_on(100)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
-        _LOGGER.debug("Turn off: %s", self.name)
-        self._light.turn_off()
+        self._action.turn_off()
 
     def update_state(self, state):
         """Update HA state."""
-        _LOGGER.debug("Update state: %s", self.name)
-        _LOGGER.debug("State: %s", state)
-        self._light.state = state
+        self._action.update_state(state)
         self._attr_is_on = state > 0
         self.async_write_ha_state()
 
@@ -105,24 +102,21 @@ class NikoHomeControlLight(LightEntity):
 class NikoHomeControlDimmableLight(NikoHomeControlLight):
     """Representation of an Niko Dimmable Light."""
 
-    def __init__(self, light, hub, options):
+    def __init__(self, hub, action, options):
         """Set up the Niko Home Control Dimmable Light platform."""
-        super().__init__(light, hub, options)
-        self._attr_unique_id = f"dimmable-{light.action_id}"
+        super().__init__(hub, action, options)
+        self._attr_unique_id = f"dimmable-{action.action_id}"
         self._attr_color_mode = ColorMode.BRIGHTNESS
         self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
-        self._attr_brightness = light.state * 2.55
+        self._attr_brightness = action.state * 2.55
 
     def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
-        _LOGGER.debug("Turn on: %s", self.name)
-        _LOGGER.debug("Brightness: %s", kwargs.get(ATTR_BRIGHTNESS, 255))
-        self._light.turn_on(kwargs.get(ATTR_BRIGHTNESS, 255) / 2.55)
+        self._action.turn_on(kwargs.get(ATTR_BRIGHTNESS, 255) / 2.55)
 
     def turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
-        _LOGGER.debug("Turn off: %s", self.name)
-        self._light.turn_off()
+        self._action.turn_off()
 
     def update_state(self, state):
         """Update HA state."""
