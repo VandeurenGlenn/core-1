@@ -16,7 +16,7 @@ async def async_setup_entry(
     entry: NikoHomeControlConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Niko Home Control light entry."""
+    """Set up the Niko Home Control fan entry."""
     controller = entry.runtime_data
 
     async_add_entities(
@@ -31,11 +31,12 @@ class NikoHomeControlFan(NikoHomeControlEntity, FanEntity):
     _action = NHCFan
 
     def __init__(self, action, controller, unique_id) -> None:
-        """Set up the Niko Home Control action platform."""
+        """Set up the Niko Home Control fan platform."""
         super().__init__(action, controller, unique_id)
         self._attr_preset_modes = PRESET_MODES
         self._attr_supported_features = FanEntityFeature.PRESET_MODE
         self._attr_enable_turn_on_off_backwards_compatibility = False
+        self.update_state()
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
