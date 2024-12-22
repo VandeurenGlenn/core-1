@@ -6,7 +6,7 @@ from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import NikoHomeControlConfigEntry
+from . import NHCController, NikoHomeControlConfigEntry
 from .const import PRESET_MODES
 from .entity import NikoHomeControlEntity
 
@@ -30,7 +30,9 @@ class NikoHomeControlFan(NikoHomeControlEntity, FanEntity):
     _attr_name = None
     _action = NHCFan
 
-    def __init__(self, action, controller, unique_id) -> None:
+    def __init__(
+        self, action: NHCFan, controller: NHCController, unique_id: str
+    ) -> None:
         """Set up the Niko Home Control fan platform."""
         super().__init__(action, controller, unique_id)
         self._attr_preset_modes = PRESET_MODES
