@@ -7,10 +7,12 @@ from typing import Any
 from nhc.controller import NHCController
 import voluptuous as vol
 
+from homeassistant.components import dhcp
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
+from homeassistant.helpers.device_registry import format_mac
 
-from .const import DOMAIN
+from .const import _LOGGER, DOMAIN
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -34,6 +36,26 @@ class NikoHomeControlConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Niko Home Control."""
 
     MINOR_VERSION = 2
+
+    _discovered_ip: str | None = None
+    _discovered_mac: str | None = None
+
+    async def async_step_dhcp(
+        self, discovery_info: dhcp.DhcpServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle DHCP discovery."""
+        self._discovered_ip = discovery_info.ip
+        self._discovered_mac = discovery_info.macaddress
+
+        _LOGGER.info(f"Discovered IP: {self._discovered_ip}")
+        _LOGGER.debug(f"Discovered MAC: {self._discovered_mac}")
+        self._async_abort_entries_match({CONF_HOST: self._discovered_ip})
+
+        await self.async_set_unique_id(format_mac(self._discovered_mac))
+        self._abort_if_unique_id_configured()
+        return await self.async_step_user({CONF_HOST: self._discovered_ip})
+
+    # return await super().async_step_dhcp(discovery_info)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
