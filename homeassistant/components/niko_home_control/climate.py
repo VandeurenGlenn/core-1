@@ -1,8 +1,5 @@
 """Support for Niko Home Control thermostats."""
 
-from nhc.controller import NHCController
-from nhc.thermostat import NHCThermostat
-
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     HVAC_MODES,
@@ -12,6 +9,7 @@ from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,
 )
+from homeassistant.components.sensor import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -38,18 +36,13 @@ async def async_setup_entry(
 class NikoHomeControlClimate(NikoHomeControlEntity, ClimateEntity):
     """Representation of a Niko Home Control thermostat."""
 
-    attr_supported_features: ClimateEntityFeature = (
+    _attr_supported_features: ClimateEntityFeature = (
         ClimateEntityFeature.PRESET_MODE
         | ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         | ClimateEntityFeature.TURN_OFF
     )
-
-    def __init__(
-        self, action: NHCThermostat, controller: NHCController, unique_id: str
-    ) -> None:
-        """Set up the Niko Home Control climate platform."""
-        super().__init__(action, controller, unique_id)
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     @property
     def hvac_modes(self):
