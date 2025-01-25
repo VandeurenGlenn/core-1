@@ -1,8 +1,5 @@
 """Support for Niko Home Control energy meter."""
 
-from nhc.controller import NHCController
-from nhc.energy import NHCEnergy
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -35,14 +32,9 @@ async def async_setup_entry(
 class NikoHomeControlPowerSensor(NikoHomeControlEntity, SensorEntity):
     """Representation of a Niko Home Control Power Sensor."""
 
-    def __init__(
-        self, action: NHCEnergy, controller: NHCController, unique_id: str
-    ) -> None:
-        """Set up the Niko Home Control Sensor platform."""
-        super().__init__(action, controller, unique_id)
-        self._attr_device_class = SensorDeviceClass.POWER
-        self._attr_state_class = SensorStateClass.MEASUREMENT
-        self._attr_suggested_unit_of_measurement = UnitOfPower.WATT
+    _attr_device_class = SensorDeviceClass.POWER
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_suggested_unit_of_measurement = UnitOfPower.WATT
 
     def update_state(self) -> None:
         """Update the state of the entity."""
