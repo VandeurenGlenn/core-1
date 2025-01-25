@@ -32,9 +32,14 @@ async def async_setup_entry(
 class NikoHomeControlPowerSensor(NikoHomeControlEntity, SensorEntity):
     """Representation of a Niko Home Control Power Sensor."""
 
+    _attr_name = None
     _attr_device_class = SensorDeviceClass.POWER
     _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_suggested_unit_of_measurement = UnitOfPower.WATT
+
+    @property
+    def native_unit_of_measurement(self):
+        """Return the unit of measurement."""
+        return UnitOfPower.WATT
 
     def update_state(self) -> None:
         """Update the state of the entity."""
