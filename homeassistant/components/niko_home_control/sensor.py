@@ -1,5 +1,7 @@
 """Support for Niko Home Control energy meter."""
 
+from nhc.energy import NHCEnergy
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -36,6 +38,7 @@ class NikoHomeControlPowerSensor(NikoHomeControlEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.POWER
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = UnitOfPower.WATT
+    _action: NHCEnergy
 
     def update_state(self) -> None:
         """Update the state of the entity."""
