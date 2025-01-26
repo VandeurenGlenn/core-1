@@ -35,11 +35,7 @@ class NikoHomeControlPowerSensor(NikoHomeControlEntity, SensorEntity):
     _attr_name = None
     _attr_device_class = SensorDeviceClass.POWER
     _attr_state_class = SensorStateClass.MEASUREMENT
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return UnitOfPower.WATT
+    _attr_native_unit_of_measurement = UnitOfPower.WATT
 
     def update_state(self) -> None:
         """Update the state of the entity."""
