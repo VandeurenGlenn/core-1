@@ -3,15 +3,13 @@
 from nhc.thermostat import NHCThermostat
 
 from homeassistant.components.climate import (
-    ATTR_TARGET_TEMP_HIGH,
-    HVAC_MODES,
-    PRESET_AWAY,
     PRESET_ECO,
-    PRESET_HOME,
     ClimateEntity,
     ClimateEntityFeature,
+    HVACMode,
 )
 from homeassistant.components.sensor import UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -41,7 +39,6 @@ class NikoHomeControlClimate(NikoHomeControlEntity, ClimateEntity):
     _attr_supported_features: ClimateEntityFeature = (
         ClimateEntityFeature.PRESET_MODE
         | ClimateEntityFeature.TARGET_TEMPERATURE
-        | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
         | ClimateEntityFeature.TURN_OFF
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
@@ -50,33 +47,62 @@ class NikoHomeControlClimate(NikoHomeControlEntity, ClimateEntity):
 
     @property
     def hvac_modes(self):
-        """Return the list of available HVAC modes."""
-        return [HVAC_MODES.OFF, HVAC_MODES.COOL, HVAC_MODES.AUTO, HVAC_MODES.HEAT]
+        """Return the list of available hvac modes."""
+        return (HVACMode.OFF, HVACMode.COOL, HVACMode.AUTO, HVACMode.HEAT)
+
+    @property
+    def hvac_mode(self):
+        """Return the current hvac mode."""
+        return self._mode
 
     @property
     def preset_modes(self):
         """Return the list of available preset modes."""
-        return [PRESET_ECO, "day", "night", "prog 1", "prog 2", "prog 3"]
+        return (PRESET_ECO, "day", "night", "prog 1", "prog 2", "prog 3")
 
     @property
     def preset_mode(self):
         """Return the current preset mode."""
-        return PRESET_AWAY if self._action.mode else PRESET_HOME
+        return self._preset
 
-    async def async_set_preset_mode(self, preset_mode):
+    def set_preset_mode(self, preset_mode):
         """Set new preset mode."""
         self._action.set_mode(preset_mode)
 
-    async def async_set_temperature(self, **kwargs):
+    def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        self._action.set_temperature(kwargs.get(ATTR_TARGET_TEMP_HIGH) * 10)
+        self._action.set_temperature(kwargs.get(ATTR_TEMPERATURE) * 10)
 
-    async def async_set_hvac_mode(self, hvac_mode):
+    def set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
         self._action.set_mode(hvac_mode)
 
     def update_state(self):
         """Update the state of the entity."""
-        self._attr_hvac_mode = self._action.state
+        mode = HVACMode.AUTO
+        preset = None
+        if self._action.state == 0:
+            preset = "day"
+        elif self._action.state == 1:
+            preset = "night"
+        elif self._action.state == 2:
+            preset = PRESET_ECO
+        elif self._action.state == 3:
+            self.mode = HVACMode.OFF
+        elif self._action.state == 4:
+            self.mode = HVACMode.COOL
+        elif self._action.state == 5:
+            preset = "prog 1"
+        elif self._action.state == 6:
+            preset = "prog 2"
+        elif self._action.state == 7:
+            preset = "prog 3"
+
+        self._mode = mode
+        self._preset = preset
+
+        self._attr_hvac_mode = mode
+        self._attr_preset_mode = preset
+
         self._attr_target_temperature = self._action.setpoint / 10
         self._attr_current_temperature = self._action.measured / 10
