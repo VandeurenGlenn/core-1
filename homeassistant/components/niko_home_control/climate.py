@@ -1,7 +1,9 @@
 """Support for Niko Home Control thermostats."""
 
+from nhc.thermostat import NHCThermostat
+
 from homeassistant.components.climate import (
-    ATTR_CURRENT_TEMPERATURE,
+    ATTR_TARGET_TEMP_HIGH,
     HVAC_MODES,
     PRESET_AWAY,
     PRESET_ECO,
@@ -44,6 +46,8 @@ class NikoHomeControlClimate(NikoHomeControlEntity, ClimateEntity):
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
+    _action: NHCThermostat
+
     @property
     def hvac_modes(self):
         """Return the list of available HVAC modes."""
@@ -65,8 +69,7 @@ class NikoHomeControlClimate(NikoHomeControlEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
-        if kwargs.get(ATTR_CURRENT_TEMPERATURE) is not None:
-            self._action.setpoint = kwargs[ATTR_CURRENT_TEMPERATURE]
+        self._action.set_temperature(kwargs.get(ATTR_TARGET_TEMP_HIGH) * 10)
 
     async def async_set_hvac_mode(self, hvac_mode):
         """Set new target hvac mode."""
@@ -75,5 +78,5 @@ class NikoHomeControlClimate(NikoHomeControlEntity, ClimateEntity):
     def update_state(self):
         """Update the state of the entity."""
         self._attr_hvac_mode = self._action.state
-        self._attr_target_temperature = self._action.setpoint
-        self._attr_current_temperature = self._action.measured
+        self._attr_target_temperature = self._action.setpoint / 10
+        self._attr_current_temperature = self._action.measured / 10
