@@ -42,4 +42,7 @@ class NikoHomeControlPowerSensor(NikoHomeControlEntity, SensorEntity):
 
     def update_state(self) -> None:
         """Update the state of the entity."""
-        self._attr_native_value = self._action.state
+        if self._action.state is None:
+            self._attr_native_value = 0
+        else:
+            self._attr_native_value = self._action.state

@@ -1,5 +1,8 @@
 """Support for Niko Home Control thermostats."""
 
+from typing import Any
+
+from nhc.const import THERMOSTAT_MODES
 from nhc.thermostat import NHCThermostat
 
 from homeassistant.components.climate import (
@@ -14,6 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import NikoHomeControlConfigEntry
+from .const import _LOGGER
 from .entity import NikoHomeControlEntity
 
 
@@ -42,64 +46,63 @@ class NikoHomeControlClimate(NikoHomeControlEntity, ClimateEntity):
         | ClimateEntityFeature.TURN_OFF
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-
+    _attr_name = None
     _action: NHCThermostat
 
     @property
     def hvac_modes(self):
         """Return the list of available hvac modes."""
-        return (HVACMode.OFF, HVACMode.COOL, HVACMode.AUTO, HVACMode.HEAT)
-
-    @property
-    def hvac_mode(self):
-        """Return the current hvac mode."""
-        return self._mode
+        return [HVACMode.OFF, HVACMode.COOL, HVACMode.AUTO]
 
     @property
     def preset_modes(self):
         """Return the list of available preset modes."""
-        return (PRESET_ECO, "day", "night", "prog 1", "prog 2", "prog 3")
+        return ["day", "night", PRESET_ECO, "prog 1", "prog 2", "prog 3"]
 
-    @property
-    def preset_mode(self):
-        """Return the current preset mode."""
-        return self._preset
+    def _get_niko_mode(self, mode: str) -> int | None:
+        """Return the Niko mode."""
+        for key, value in THERMOSTAT_MODES.items():
+            if value == mode:
+                return key
+        return None
 
-    def set_preset_mode(self, preset_mode):
-        """Set new preset mode."""
-        self._action.set_mode(preset_mode)
-
-    def set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        self._action.set_temperature(kwargs.get(ATTR_TEMPERATURE) * 10)
+        await self._action.set_temperature(kwargs.get(ATTR_TEMPERATURE, 20) * 10)
 
-    def set_hvac_mode(self, hvac_mode):
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set new preset mode."""
+        _LOGGER.debug("Setting preset mode to %s", preset_mode)
+        mode = self._get_niko_mode(preset_mode)
+        _LOGGER.debug("Setting mode to %s", mode)
+        if mode is None:
+            _LOGGER.error("Invalid preset mode %s", preset_mode)
+        else:
+            await self._action.set_mode(mode)
+
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        self._action.set_mode(hvac_mode)
+        _LOGGER.debug("Setting hvac mode to %s", hvac_mode)
+        mode = self._get_niko_mode(hvac_mode)
+        _LOGGER.debug("Setting mode to %s", mode)
+        if mode is None:
+            _LOGGER.error("Invalid preset mode %s", hvac_mode)
+        else:
+            await self._action.set_mode(mode)
 
-    def update_state(self):
+    async def async_turn_off(self) -> None:
+        """Turn off."""
+        _LOGGER.debug("Turning off")
+        await self._action.set_mode(3)
+
+    def update_state(self) -> None:
         """Update the state of the entity."""
         mode = HVACMode.AUTO
-        preset = None
-        if self._action.state == 0:
-            preset = "day"
-        elif self._action.state == 1:
-            preset = "night"
-        elif self._action.state == 2:
-            preset = PRESET_ECO
-        elif self._action.state == 3:
-            self.mode = HVACMode.OFF
-        elif self._action.state == 4:
-            self.mode = HVACMode.COOL
-        elif self._action.state == 5:
-            preset = "prog 1"
-        elif self._action.state == 6:
-            preset = "prog 2"
-        elif self._action.state == 7:
-            preset = "prog 3"
-
-        self._mode = mode
-        self._preset = preset
+        preset = self.preset_modes[0]
+        if self._action.state in (3, 4):
+            mode = THERMOSTAT_MODES[self._action.state]
+        else:
+            preset = THERMOSTAT_MODES[self._action.state]
 
         self._attr_hvac_mode = mode
         self._attr_preset_mode = preset

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from nclib.errors import NetcatError
 from nhc.controller import NHCController
 
 from homeassistant.config_entries import ConfigEntry
@@ -30,7 +29,7 @@ async def async_setup_entry(
     controller = NHCController(entry.data[CONF_HOST])
     try:
         await controller.connect()
-    except NetcatError as err:
+    except TimeoutError as err:
         raise ConfigEntryNotReady("cannot connect to controller.") from err
     except OSError as err:
         raise ConfigEntryNotReady(
