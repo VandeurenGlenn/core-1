@@ -49,6 +49,8 @@ class NikoHomeControlClimate(NikoHomeControlEntity, ClimateEntity):
     _attr_name = None
     _action: NHCThermostat
 
+    _attr_translation_key = "nhc_thermostat"
+
     @property
     def hvac_modes(self):
         """Return the list of available hvac modes."""
@@ -57,7 +59,16 @@ class NikoHomeControlClimate(NikoHomeControlEntity, ClimateEntity):
     @property
     def preset_modes(self):
         """Return the list of available preset modes."""
-        return ["day", "night", PRESET_ECO, "prog 1", "prog 2", "prog 3"]
+        return [
+            "day",
+            "night",
+            PRESET_ECO,
+            HVACMode.OFF,
+            HVACMode.COOL,
+            "prog 1",
+            "prog 2",
+            "prog 3",
+        ]
 
     def _get_niko_mode(self, mode: str) -> int | None:
         """Return the Niko mode."""
@@ -80,15 +91,15 @@ class NikoHomeControlClimate(NikoHomeControlEntity, ClimateEntity):
         else:
             await self._action.set_mode(mode)
 
-    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
-        """Set new target hvac mode."""
-        _LOGGER.debug("Setting hvac mode to %s", hvac_mode)
-        mode = self._get_niko_mode(hvac_mode)
-        _LOGGER.debug("Setting mode to %s", mode)
-        if mode is None:
-            _LOGGER.error("Invalid preset mode %s", hvac_mode)
-        else:
-            await self._action.set_mode(mode)
+    # async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+    #     """Set new target hvac mode."""
+    #     _LOGGER.debug("Setting hvac mode to %s", hvac_mode)
+    #     mode = self._get_niko_mode(hvac_mode)
+    #     _LOGGER.debug("Setting mode to %s", mode)
+    #     if mode is None:
+    #         _LOGGER.error("Invalid preset mode %s", hvac_mode)
+    #     else:
+    #         await self._action.set_mode(mode)
 
     async def async_turn_off(self) -> None:
         """Turn off."""
@@ -98,11 +109,10 @@ class NikoHomeControlClimate(NikoHomeControlEntity, ClimateEntity):
     def update_state(self) -> None:
         """Update the state of the entity."""
         mode = HVACMode.AUTO
-        preset = self.preset_modes[0]
+        preset = self.preset_modes[self._action.state]
+
         if self._action.state in (3, 4):
             mode = THERMOSTAT_MODES[self._action.state]
-        else:
-            preset = THERMOSTAT_MODES[self._action.state]
 
         self._attr_hvac_mode = mode
         self._attr_preset_mode = preset
