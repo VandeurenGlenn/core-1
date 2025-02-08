@@ -6,7 +6,7 @@ import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.climate import ATTR_HVAC_MODE, ATTR_PRESET_MODE
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -114,31 +114,6 @@ async def test_is_expected_state(
     """Test turning on the light."""
     await setup_integration(hass, mock_config_entry)
     assert hass.states.get("climate.thermostat").state == "auto"
-
-
-@pytest.mark.parametrize(
-    ("thermostat_id", "entity_id", "mode"), [(5, "climate.thermostat", "off")]
-)
-async def test_turning_off(
-    hass: HomeAssistant,
-    mock_niko_home_control_connection: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    climate: AsyncMock,
-    thermostat_id: int,
-    entity_id: str,
-    mode: str,
-) -> None:
-    """Test turning off the light."""
-    await setup_integration(hass, mock_config_entry)
-    await hass.services.async_call(
-        "climate",
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
-    mock_niko_home_control_connection.thermostats[
-        f"thermostat-{thermostat_id}"
-    ].set_mode.assert_called_once_with(3)
 
 
 async def test_updating(

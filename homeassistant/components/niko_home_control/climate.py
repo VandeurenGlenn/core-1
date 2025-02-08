@@ -17,7 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import NikoHomeControlConfigEntry
-from .const import _LOGGER
 from .entity import NikoHomeControlEntity
 
 
@@ -41,9 +40,7 @@ class NikoHomeControlClimate(NikoHomeControlEntity, ClimateEntity):
     """Representation of a Niko Home Control thermostat."""
 
     _attr_supported_features: ClimateEntityFeature = (
-        ClimateEntityFeature.PRESET_MODE
-        | ClimateEntityFeature.TARGET_TEMPERATURE
-        | ClimateEntityFeature.TURN_OFF
+        ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_name = None
@@ -63,8 +60,6 @@ class NikoHomeControlClimate(NikoHomeControlEntity, ClimateEntity):
             "day",
             "night",
             PRESET_ECO,
-            HVACMode.OFF,
-            HVACMode.COOL,
             "prog1",
             "prog2",
             "prog3",
@@ -83,39 +78,25 @@ class NikoHomeControlClimate(NikoHomeControlEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
-        _LOGGER.debug("Setting preset mode to %s", preset_mode)
-        mode = self._get_niko_mode(preset_mode)
-        _LOGGER.debug("Setting mode to %s", mode)
-        if mode is None:
-            _LOGGER.error("Invalid preset mode %s", preset_mode)
+        await self._action.set_mode(self._get_niko_mode(preset_mode))
+
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set new target hvac mode."""
+        if hvac_mode == HVACMode.OFF:
+            mode = 3
+        elif hvac_mode == HVACMode.COOL:
+            mode = 4
         else:
-            await self._action.set_mode(mode)
-
-    # async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
-    #     """Set new target hvac mode."""
-    #     _LOGGER.debug("Setting hvac mode to %s", hvac_mode)
-    #     mode = self._get_niko_mode(hvac_mode)
-    #     _LOGGER.debug("Setting mode to %s", mode)
-    #     if mode is None:
-    #         _LOGGER.error("Invalid preset mode %s", hvac_mode)
-    #     else:
-    #         await self._action.set_mode(mode)
-
-    async def async_turn_off(self) -> None:
-        """Turn off."""
-        _LOGGER.debug("Turning off")
-        await self._action.set_mode(3)
+            mode = 5
+        await self._action.set_mode(mode)
 
     def update_state(self) -> None:
         """Update the state of the entity."""
-        mode = HVACMode.AUTO
-        preset = self.preset_modes[self._action.state]
-
         if self._action.state in (3, 4):
-            mode = THERMOSTAT_MODES[self._action.state]
-
-        self._attr_hvac_mode = mode
-        self._attr_preset_mode = preset
+            self._attr_hvac_mode = THERMOSTAT_MODES[self._action.state]
+        else:
+            self._attr_hvac_mode = HVACMode.AUTO
+            self._attr_preset_mode = THERMOSTAT_MODES[self._action.state]
 
         self._attr_target_temperature = self._action.setpoint / 10
         self._attr_current_temperature = self._action.measured / 10
