@@ -65,9 +65,9 @@ class NikoHomeControlClimate(NikoHomeControlEntity, ClimateEntity):
             PRESET_ECO,
             HVACMode.OFF,
             HVACMode.COOL,
-            "prog 1",
-            "prog 2",
-            "prog 3",
+            "prog1",
+            "prog2",
+            "prog3",
         ]
 
     def _get_niko_mode(self, mode: str) -> int | None:
