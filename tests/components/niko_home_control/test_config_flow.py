@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.niko_home_control.const import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -88,7 +88,6 @@ async def test_duplicate_entry(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
 
 async def test_import_flow(
     hass: HomeAssistant,
@@ -276,3 +275,4 @@ async def test_async_step_reconfigure_cannot_connect(
 
         assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": "cannot_connect"}
+

@@ -16,7 +16,7 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -89,7 +89,7 @@ class ArubaDeviceScanner(DeviceScanner):
     def get_aruba_data(self) -> dict[str, dict[str, str]] | None:
         """Retrieve data from Aruba Access Point and return parsed result."""
 
-        connect = f"ssh {self.username}@{self.host} -o HostKeyAlgorithms=ssh-rsa"
+        connect = f"ssh {self.username}@{self.host}"
         ssh: pexpect.spawn[str] = pexpect.spawn(connect, encoding="utf-8")
         query = ssh.expect(
             [

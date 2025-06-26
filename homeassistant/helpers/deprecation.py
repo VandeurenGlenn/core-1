@@ -190,11 +190,10 @@ def _print_deprecation_warning_internal_impl(
     *,
     log_when_no_integration_is_found: bool,
 ) -> None:
-    # pylint: disable=import-outside-toplevel
-    from homeassistant.core import async_get_hass_or_none
-    from homeassistant.loader import async_suggest_report_issue
+    from homeassistant.core import async_get_hass_or_none  # noqa: PLC0415
+    from homeassistant.loader import async_suggest_report_issue  # noqa: PLC0415
 
-    from .frame import MissingIntegrationFrame, get_integration_frame
+    from .frame import MissingIntegrationFrame, get_integration_frame  # noqa: PLC0415
 
     logger = logging.getLogger(module_name)
     if breaks_in_ha_version:
@@ -244,35 +243,35 @@ def _print_deprecation_warning_internal_impl(
             )
 
 
-class DeprecatedConstant(NamedTuple):
+class DeprecatedConstant[T](NamedTuple):
     """Deprecated constant."""
 
-    value: Any
+    value: T
     replacement: str
     breaks_in_ha_version: str | None
 
 
-class DeprecatedConstantEnum(NamedTuple):
+class DeprecatedConstantEnum[T: (StrEnum | IntEnum | IntFlag)](NamedTuple):
     """Deprecated constant."""
 
-    enum: StrEnum | IntEnum | IntFlag
+    enum: T
     breaks_in_ha_version: str | None
 
 
-class DeprecatedAlias(NamedTuple):
+class DeprecatedAlias[T](NamedTuple):
     """Deprecated alias."""
 
-    value: Any
+    value: T
     replacement: str
     breaks_in_ha_version: str | None
 
 
-class DeferredDeprecatedAlias:
+class DeferredDeprecatedAlias[T]:
     """Deprecated alias with deferred evaluation of the value."""
 
     def __init__(
         self,
-        value_fn: Callable[[], Any],
+        value_fn: Callable[[], T],
         replacement: str,
         breaks_in_ha_version: str | None,
     ) -> None:
@@ -282,7 +281,7 @@ class DeferredDeprecatedAlias:
         self._value_fn = value_fn
 
     @functools.cached_property
-    def value(self) -> Any:
+    def value(self) -> T:
         """Return the value."""
         return self._value_fn()
 
@@ -369,7 +368,7 @@ class EnumWithDeprecatedMembers(EnumType):
     """Enum with deprecated members."""
 
     def __new__(
-        mcs,  # noqa: N804  ruff bug, ruff does not understand this is a metaclass
+        mcs,
         cls: str,
         bases: tuple[type, ...],
         classdict: _EnumDict,

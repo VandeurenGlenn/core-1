@@ -14,7 +14,7 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed
 
@@ -73,7 +73,7 @@ async def test_number_entities(
     mock_homewizardenergy.system.side_effect = RequestError
     with pytest.raises(
         HomeAssistantError,
-        match=r"^An error occurred while communicating with HomeWizard device$",
+        match=r"^An error occurred while communicating with your HomeWizard Energy device$",
     ):
         await hass.services.async_call(
             number.DOMAIN,

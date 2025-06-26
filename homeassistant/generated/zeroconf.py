@@ -128,6 +128,10 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "lifx",
     },
+    "LIFX Luna": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
     "LIFX Mini": {
         "always_discover": True,
         "domain": "lifx",
@@ -205,6 +209,14 @@ HOMEKIT = {
         "domain": "nanoleaf",
     },
     "NL59": {
+        "always_discover": False,
+        "domain": "nanoleaf",
+    },
+    "NL69": {
+        "always_discover": False,
+        "domain": "nanoleaf",
+    },
+    "NL81": {
         "always_discover": False,
         "domain": "nanoleaf",
     },
@@ -328,6 +340,11 @@ ZEROCONF = {
     "_airport._tcp.local.": [
         {
             "domain": "apple_tv",
+        },
+    ],
+    "_altruist._tcp.local.": [
+        {
+            "domain": "altruist",
         },
     ],
     "_amzn-alexa._tcp.local.": [
@@ -517,9 +534,19 @@ ZEROCONF = {
             "domain": "homekit_controller",
         },
     ],
+    "_homeconnect._tcp.local.": [
+        {
+            "domain": "home_connect",
+        },
+    ],
     "_homekit._tcp.local.": [
         {
             "domain": "homekit",
+        },
+    ],
+    "_homewizard._tcp.local.": [
+        {
+            "domain": "homewizard",
         },
     ],
     "_hscp._tcp.local.": [
@@ -609,6 +636,11 @@ ZEROCONF = {
             "domain": "homewizard",
         },
     ],
+    "_iometer._tcp.local.": [
+        {
+            "domain": "iometer",
+        },
+    ],
     "_ipp._tcp.local.": [
         {
             "domain": "ipp",
@@ -690,6 +722,11 @@ ZEROCONF = {
     "_meshcop._udp.local.": [
         {
             "domain": "thread",
+        },
+    ],
+    "_mieleathome._tcp.local.": [
+        {
+            "domain": "miele",
         },
     ],
     "_miio._udp.local.": [
@@ -785,6 +822,11 @@ ZEROCONF = {
             "domain": "russound_rio",
         },
     ],
+    "_shelly._tcp.local.": [
+        {
+            "domain": "shelly",
+        },
+    ],
     "_sideplay._tcp.local.": [
         {
             "domain": "ecobee",
@@ -826,11 +868,6 @@ ZEROCONF = {
     "_soundtouch._tcp.local.": [
         {
             "domain": "soundtouch",
-        },
-    ],
-    "_spotify-connect._tcp.local.": [
-        {
-            "domain": "spotify",
         },
     ],
     "_ssh._tcp.local.": [
@@ -876,6 +913,11 @@ ZEROCONF = {
         {
             "domain": "zha",
             "name": "uzg-01*",
+        },
+    ],
+    "_vege._tcp.local.": [
+        {
+            "domain": "vegehub",
         },
     ],
     "_viziocast._tcp.local.": [
